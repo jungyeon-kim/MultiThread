@@ -35,7 +35,7 @@ public:
 };
 
 BakeryLock BL{};
-mutex ML{};
+mtx ML{};
 
 void workerThread(int numOfThread, int threadID)
 {

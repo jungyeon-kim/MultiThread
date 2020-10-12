@@ -9,7 +9,7 @@ using namespace std::chrono;
 /*
 	성긴동기화
 
-	1. 리스트 객체가 mutex 객체를 가지고 있다.
+	1. 리스트 객체가 mtx 객체를 가지고 있다.
 	2. 리스트 자체를 락킹한다.
 */
 
@@ -26,7 +26,7 @@ public:
 class List 
 {
 	Node head{ 0x80000000 }, tail{ 0x7FFFFFFF };
-	mutex glock{};
+	mutex mtx{};
 public:
 	List() { head.next = &tail; }
 	~List() {}
@@ -45,7 +45,7 @@ public:
 	{
 		Node* pred{}, * curr{};
 		pred = &head;
-		glock.lock();
+		mtx.lock();
 		curr = pred->next;
 		while (curr->key < key) 
 		{
@@ -54,7 +54,7 @@ public:
 		}
 		if (key == curr->key) 
 		{
-			glock.unlock();
+			mtx.unlock();
 			return false;
 		}
 		else 
@@ -62,7 +62,7 @@ public:
 			Node* node{ new Node(key) };
 			node->next = curr;
 			pred->next = node;
-			glock.unlock();
+			mtx.unlock();
 			return true;
 		}
 	}
@@ -70,7 +70,7 @@ public:
 	{
 		Node* pred{}, * curr{};
 		pred = &head;
-		glock.lock();
+		mtx.lock();
 		curr = pred->next;
 		while (curr->key < key) 
 		{
@@ -81,12 +81,12 @@ public:
 		{
 			pred->next = curr->next;
 			delete curr;
-			glock.unlock();
+			mtx.unlock();
 			return true;
 		}
 		else 
 		{
-			glock.unlock();
+			mtx.unlock();
 			return false;
 		}
 
@@ -95,7 +95,7 @@ public:
 	{
 		Node* pred{}, * curr{};
 		pred = &head;
-		glock.lock();
+		mtx.lock();
 		curr = pred->next;
 		while (curr->key < key) 
 		{
@@ -104,12 +104,12 @@ public:
 		}
 		if (key == curr->key) 
 		{
-			glock.unlock();
+			mtx.unlock();
 			return true;
 		}
 		else 
 		{
-			glock.unlock();
+			mtx.unlock();
 			return false;
 		}
 	}
@@ -131,7 +131,7 @@ constexpr int NUM_TEST{ 4000000 };
 constexpr int KEY_RANGE{ 1000 };
 constexpr int MAX_THREADS{ 8 };
 
-List fList;
+List lst;
 
 void ThreadFunc(int numOfThread)
 {
@@ -142,15 +142,15 @@ void ThreadFunc(int numOfThread)
 		switch (rand() % 3) {
 		case 0: 
 			key = rand() % KEY_RANGE;
-			fList.add(key);
+			lst.add(key);
 			break;
 		case 1: 
 			key = rand() % KEY_RANGE;
-			fList.remove(key);
+			lst.remove(key);
 			break;
 		case 2: 
 			key = rand() % KEY_RANGE;
-			fList.contains(key);
+			lst.contains(key);
 			break;
 		default: cout << "Error\n";
 			exit(-1);
@@ -170,7 +170,7 @@ int main()
 		for (int j = 0; j < i; ++j) threads.emplace_back(ThreadFunc, i);
 		for (auto& thread : threads) thread.join();
 
-		fList.printElement(20);
+		lst.printElement(20);
 
 		auto duration{ high_resolution_clock::now() - start };
 		cout << i << " Threads Duration = " << duration_cast<milliseconds>(duration).count() << " milliseconds\n";

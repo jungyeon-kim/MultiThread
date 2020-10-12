@@ -58,12 +58,12 @@ using namespace std::chrono;
 	detach():	해당 스레드 객체에 연결된 스레드를 떼어낸다. (스레드는 계속 실행되지만 제어할 수 없음, join()불가능)
 	joinable():	해당 스레드를 join()으로 기다릴 수 있는 상태인지 bool값을 반환한다. (detach된 상태라면 false 반환)
 
-	mutex)
+	mtx)
 	lock():		어떤 자원을 다른 스레드에서 사용중이면 대기. 사용중이 아니면 자신의 스레드에서 사용중 표시
 	unLock():	사용중 표시를 지움
 	lock_guard<T>:	lock을 걸고 자신이 포함된 스코프를 빠져나갈때 자동으로 unlock
 
-	※ mutex 객체는 전역변수여야함 (같은 자원을 사용하는 스레드마다 mutex도 같은 객체여야하기 때문)
+	※ mtx 객체는 전역변수여야함 (같은 자원을 사용하는 스레드마다 mutex도 같은 객체여야하기 때문)
 	※ 정확성은 올라가지만, 병렬성이 떨어지고 os를 호출하기 때문에 성능저하 발생
 
 	atomic)
@@ -140,7 +140,7 @@ void solution1()
 // 상호배제, 임계영역에 대한 실습코드
 int sum{};					// 스레드 공유자원
 atomic<int> atomicSum{};	// 스레드 공유자원
-mutex m{};					// mutex 객체
+mtx m{};					// mtx 객체
 
 void add(int numOfThread)
 {

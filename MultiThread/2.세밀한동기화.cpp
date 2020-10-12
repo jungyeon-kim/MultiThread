@@ -9,13 +9,13 @@ using namespace std::chrono;
 /*
 	세밀한동기화
 
-	1. 노드 객체가 mutex 객체를 가지고 있다.
+	1. 노드 객체가 mtx 객체를 가지고 있다.
 	2. 각각의 노드를 개별적으로 락킹한다.
 */
 
 class Node
 {
-	mutex glock{};
+	mutex mtx{};
 public:
 	int key{};
 	Node* next{};
@@ -23,8 +23,8 @@ public:
 	Node(int key_value) { key = key_value; }
 	~Node() = default;
 
-	void lock() { glock.lock(); }
-	void unlock() { glock.unlock(); }
+	void lock() { mtx.lock(); }
+	void unlock() { mtx.unlock(); }
 };
 
 class List
@@ -48,17 +48,18 @@ public:
 	{
 		Node* pred{}, * curr{};
 
-		head.lock();
 		pred = &head;
 		curr = pred->next;
-		curr->lock();
+
 		while (curr->key < key)
 		{
-			pred->unlock();
 			pred = curr;
 			curr = curr->next;
-			curr->lock();
 		}
+
+		curr->lock();
+		pred->lock();
+
 		if (key == curr->key)
 		{
 			curr->unlock();
@@ -80,17 +81,18 @@ public:
 	{
 		Node* pred{}, * curr{};
 
-		head.lock();
 		pred = &head;
 		curr = pred->next;
-		curr->lock();
+
 		while (curr->key < key)
 		{
-			pred->unlock();
 			pred = curr;
 			curr = curr->next;
-			curr->lock();
 		}
+
+		curr->lock();
+		pred->lock();
+
 		if (key == curr->key)
 		{
 			pred->next = curr->next;
@@ -110,17 +112,18 @@ public:
 	{
 		Node* pred{}, * curr{};
 
-		head.lock();
 		pred = &head;
 		curr = pred->next;
-		curr->lock();
+
 		while (curr->key < key)
 		{
-			pred->unlock();
 			pred = curr;
 			curr = curr->next;
-			curr->lock();
 		}
+
+		curr->lock();
+		pred->lock();
+
 		if (key == curr->key)
 		{
 			curr->unlock();
@@ -152,7 +155,7 @@ constexpr int NUM_TEST{ 4000000 };
 constexpr int KEY_RANGE{ 1000 };
 constexpr int MAX_THREADS{ 8 };
 
-List fList;
+List lst;
 
 void ThreadFunc(int numOfThread)
 {
@@ -163,15 +166,15 @@ void ThreadFunc(int numOfThread)
 		switch (rand() % 3) {
 		case 0:
 			key = rand() % KEY_RANGE;
-			fList.add(key);
+			lst.add(key);
 			break;
 		case 1:
 			key = rand() % KEY_RANGE;
-			fList.remove(key);
+			lst.remove(key);
 			break;
 		case 2:
 			key = rand() % KEY_RANGE;
-			fList.contains(key);
+			lst.contains(key);
 			break;
 		default: cout << "Error\n";
 			exit(-1);
@@ -191,7 +194,7 @@ int main()
 		for (int j = 0; j < i; ++j) threads.emplace_back(ThreadFunc, i);
 		for (auto& thread : threads) thread.join();
 
-		fList.printElement(20);
+		lst.printElement(20);
 
 		auto duration{ high_resolution_clock::now() - start };
 		cout << i << " Threads Duration = " << duration_cast<milliseconds>(duration).count() << " milliseconds\n";
