@@ -140,7 +140,7 @@ void solution1()
 // 상호배제, 임계영역에 대한 실습코드
 int sum{};					// 스레드 공유자원
 atomic<int> atomicSum{};	// 스레드 공유자원
-mtx m{};					// mtx 객체
+mutex m{};					// mtx 객체
 
 void add(int numOfThread)
 {

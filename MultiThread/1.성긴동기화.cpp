@@ -59,7 +59,7 @@ public:
 		}
 		else 
 		{
-			Node* node{ new Node(key) };
+			Node* node{ new Node{key} };
 			node->next = curr;
 			pred->next = node;
 			mtx.unlock();
