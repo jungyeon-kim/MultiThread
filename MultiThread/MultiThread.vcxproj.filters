@@ -13,10 +13,25 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="소스 파일\nb_list">
+      <UniqueIdentifier>{7f9374c9-3738-4e2e-b668-d0f0b5c3d6f3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="thread.cpp">
       <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="bakery_lock.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
+    <ClCompile Include="3.낙천적동기화.cpp">
+      <Filter>소스 파일\nb_list</Filter>
+    </ClCompile>
+    <ClCompile Include="1.성긴동기화.cpp">
+      <Filter>소스 파일\nb_list</Filter>
+    </ClCompile>
+    <ClCompile Include="2.세밀한동기화.cpp">
+      <Filter>소스 파일\nb_list</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

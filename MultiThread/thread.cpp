@@ -31,7 +31,7 @@ using namespace std::chrono;
 
 /*
 	주의점)
-	DataRace:	같은 메모리를 여러 스레드에서 읽고 써서 의도치 않는 결과가 나오는 것.
+	DataRace:	같은 메모리를 여러 스레드에서 읽고 써서 의도치 않은 결과가 나오는 것.
 				ex) 레지스터에 변수를 읽어와 연산 후 변수에 저장하려는 도중에 다른 스레드에서 끼어들때
 				※ 반드시 하나 이상의 쓰기 동작이 있어야함. 그래야 문제가 발생하니까.
 				※ 싱글코어에서도 문맥전환이 일어나면 데이터레이스가 일어날 수 있음
@@ -39,15 +39,16 @@ using namespace std::chrono;
 				ex) 중복 lock, 둘 이상의 스레드가 서로 사용중인 자원을 요구하면서 각자의 자원을 놓지않을 때
 
 	성능을 위해 mutex없이 DataRace를 직접 컨트롤 할 때 메모리 일관성 문제)
-	최적화:			컴파일러가 코드를 최적화하면서 문제 발생 -> volatile로 해결
+	최적화:			컴파일러가 멀티스레드를 고려하지 않고 코드를 최적화하면서 문제 발생 -> volatile로 해결
 	Write Buffer:	당장에 메모리를 Write할 수 없다면 Buffer에 놔두고 다른 작업을 수행함.
 					CPU에서 먼저 실행 가능한 명령부터 수행(비순차적 실행, Out of Order Execution)하면서 문제 발생
-					-> volatile로도 해결 불가
+					-> CAS 연산으로 해결 (CPU는 volatile이 뭔지 모름)
 	Cash Line:		CPU는 메모리를 64byte로 이루어진 캐시라인 단위로 읽음. (한 캐시라인을 여러 스레드에서 동시에 접근 불가)
-					캐시라인의 경계를 침범해 여러 캐시라인을 차지하게 될 경우
-					다른 스레드에서 중간 값을 읽어갈 수 있음 -> 포인터나 pragma pack 주의
+					1.	캐시라인의 경계를 침범해 여러 캐시라인을 차지하게 될 경우
+						다른 스레드에서 중간 값을 읽어갈 수 있음 -> 포인터, pragma pack 주의
+					2.	특정 캐시라인에 접근하기위해 코어간에 switching이 일어나 성능저하 (Cash Thrashing)
 
-	※ volatile:		컴파일러의 최적화 옵션이 적용되지 않음
+	※ volatile:		컴파일러의 최적화 옵션이 적용되지 않음 (스레드세이프 용도가 아님)
 					포인터의 경우 *앞에 오면 포인터가 가리키는 값이 volatile, 뒤에오면 포인터가 volatile
 */
 
@@ -71,11 +72,44 @@ using namespace std::chrono;
 										메모리 접근을 시작하지 못하게 함
 	atomic_compare_exchange_strong():	인수1과 인수2가 같으면 인수3을 인수1에 대입하고 true를 반환
 										-> CAS (Compare And Set)
+	non-block)
+	wait-free:	모든 함수가 정해진 시간에 수행을 끝마침
+	lock-free:	하나 이상의 함수가 정해진 시간에 수행을 끝마침
 
 	※ Lock 없이 CAS를 이용한 논블로킹 자료구조를 사용해 동기화하는 것이 바람직하다.
 */
 
-constexpr int MAX_THREADS = 64;
+constexpr int MAX_THREADS{ 64 };
+
+// 스레드의 이해를 돕기위한 실습코드
+volatile int global{};
+
+void workerThread(int numOfThread)
+{
+	// 문제1: 데이터 레이스가 발생해 예상밖의 결과가 나옴
+	// 문제2: 데이터영역에 접근하면 멀티스레드 환경에서 Cash Thrashing이 일어나 성능이 떨어짐
+	// -> solution2()에서 해결
+	for (int i = 0; i < 500000000 / numOfThread; ++i) global += 2;
+}
+
+void testThread()
+{
+	vector<thread> threads{};
+
+	for (int i = 1; i <= MAX_THREADS; i *= 2)
+	{
+		global = 0;
+		threads.clear();
+		auto start{ high_resolution_clock::now() };
+
+		for (int j = 0; j < i; ++j) threads.emplace_back(workerThread, i);
+		for (auto& thread : threads) thread.join();
+
+		auto duration{ high_resolution_clock::now() - start };
+		cout << i << " Threads" << " Sum = " << global;
+		cout << " Duration = " << duration_cast<milliseconds>(duration).count() << " milliseconds\n";
+	}
+}
 
 // join()과 detach()에 대한 실습코드
 void printID(int myID)
@@ -142,37 +176,9 @@ void solution2()
 	}
 }
 
-// 스레드의 이해를 돕기위한 실습코드
-volatile int global{};
-
-void workerThread(int numOfThread)
-{
-	// 문제: 데이터 레이스가 발생해 예상밖의 결과가 나옴 -> solution2()에서 해결
-	for (int i = 0; i < 500000000 / numOfThread; ++i) global += 2;
-}
-
-void testThread()
-{
-	vector<thread> threads{};
-
-	for (int i = 1; i <= MAX_THREADS; i *= 2)
-	{
-		global = 0;
-		threads.clear();
-		auto start{ high_resolution_clock::now() };
-
-		for (int j = 0; j < i; ++j) threads.emplace_back(workerThread, i);
-		for (auto& thread : threads) thread.join();
-
-		auto duration{ high_resolution_clock::now() - start };
-		cout << i << " Threads" << " Sum = " << global;
-		cout << " Duration = " << duration_cast<milliseconds>(duration).count() << " milliseconds\n";
-	}
-}
-
 int main()
 {
 	//testThread();
 	//solution1();
-	solution2();
+	//solution2();
 }
