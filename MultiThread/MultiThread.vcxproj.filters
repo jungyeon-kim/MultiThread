@@ -33,5 +33,11 @@
     <ClCompile Include="2.세밀한동기화.cpp">
       <Filter>소스 파일\nb_list</Filter>
     </ClCompile>
+    <ClCompile Include="4.게으른동기화.cpp">
+      <Filter>소스 파일\nb_list</Filter>
+    </ClCompile>
+    <ClCompile Include="5.게으른동기화%28shared_ptr%29.cpp">
+      <Filter>소스 파일\nb_list</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

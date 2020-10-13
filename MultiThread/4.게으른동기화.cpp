@@ -1,5 +1,6 @@
 #include <iostream>
 #include <mutex>
+#include <atomic>
 #include <chrono>
 #include <vector>
 
@@ -7,24 +8,24 @@ using namespace std;
 using namespace std::chrono;
 
 /*
-	낙천적동기화
+	게으른동기화
 
-	1. 세밀한동기화와 다르게 순회시에는 락킹을 하지않는다.
-	2. 순회를 위해 제거된 노드를 delete하지 않는다.
-	3. 함수 실행을 위해 pred와 curr을 락킹하였을때 유효성을 검사하고 유효하지않다면 다시 순회한다.
-	   -> pred와 curr가 제거되지 않았는가? & pred와 curr사이에 다른 노드가 끼어들지 않았는가?
+	1. 낙천전동기화와 다르게 유효성 검사에서 리스트를 순회하지 않는다.
+	2. 각 노드마다 리스트에서 제거되었는지 판별하는 마킹변수를 추가
 
-	※ 유효성 검사에 계속 실패하는 스레드가 있을 수 있다. -> 기아 유발
-	※ 유효성 검사는 리스트를 처음부터 순회한다. -> 성능저하
-	※ 제거된 노드를 delete하지 않는다. -> 메모리 릭
+	※ 마킹은 제거동작보다 먼저 실행되야한다.
+	※ 여전히 메모리 릭 발생
 */
 
 class Node
 {
+private:
 	mutex mtx{};
 public:
 	int key{};
+	bool marked{};
 	Node* next{};
+public:
 	Node() = default;
 	Node(int value) { key = value; }
 	~Node() = default;
@@ -112,6 +113,8 @@ public:
 			{
 				if (key == curr->key)
 				{
+					curr->marked = true;
+					atomic_thread_fence(memory_order_seq_cst);
 					pred->next = curr->next;
 					pred->unlock();
 					curr->unlock();
@@ -134,44 +137,13 @@ public:
 	}
 	bool contains(int key)
 	{
-		while (true)
-		{
-			Node* pred{ &head };
-			Node* curr{ pred->next };
-
-			while (curr->key < key)
-			{
-				pred = curr;
-				curr = curr->next;
-			}
-
-			pred->lock();
-			curr->lock();
-
-			if (valid(pred, curr))
-			{
-				pred->unlock();
-				curr->unlock();
-				return key == curr->key;
-			}
-			else
-			{
-				pred->unlock();
-				curr->unlock();
-			}
-		}
+		Node* node{ &head };
+		while (node->key < key) node = node->next;
+		return node->key == key && !node->marked;
 	}
 	bool valid(Node* pred, Node* curr)
 	{
-		Node* node{ &head };
-
-		while (node->key <= pred->key)
-		{
-			if (node == pred) return pred->next == curr;
-			node = node->next;
-		}
-
-		return false;
+		return !pred->marked && !curr->marked && pred->next == curr;
 	}
 	void printElement(int count)
 	{
