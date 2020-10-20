@@ -1,4 +1,4 @@
-#include <iostream>
+ï»¿#include <iostream>
 #include <mutex>
 #include <chrono>
 #include <vector>
@@ -7,14 +7,15 @@ using namespace std;
 using namespace std::chrono;
 
 /*
-	¼¼¹ÐÇÑµ¿±âÈ­
+	ì„¸ë°€í•œë™ê¸°í™”
 
-	1. ³ëµå °´Ã¼°¡ mtx °´Ã¼¸¦ °¡Áö°í ÀÖ´Ù.
-	2. °¢°¢ÀÇ ³ëµå¸¦ °³º°ÀûÀ¸·Î ¶ôÅ·ÇÑ´Ù.
+	1. ë…¸ë“œ ê°ì²´ê°€ mutex ê°ì²´ë¥¼ ê°€ì§€ê³  ìžˆë‹¤.
+	2. ê°ê°ì˜ ë…¸ë“œë¥¼ ê°œë³„ì ìœ¼ë¡œ ë½í‚¹í•œë‹¤.
 */
 
 class Node
 {
+private:
 	mutex mtx{};
 public:
 	int key{};
@@ -48,18 +49,17 @@ public:
 	{
 		Node* pred{}, * curr{};
 
+		head.lock();
 		pred = &head;
 		curr = pred->next;
-
+		curr->lock();
 		while (curr->key < key)
 		{
+			pred->unlock();
 			pred = curr;
 			curr = curr->next;
+			curr->lock();
 		}
-
-		curr->lock();
-		pred->lock();
-
 		if (key == curr->key)
 		{
 			curr->unlock();
@@ -68,7 +68,7 @@ public:
 		}
 		else
 		{
-			Node* node{ new Node{key} };
+			Node* node{ new Node(key) };
 			node->next = curr;
 			pred->next = node;
 
@@ -81,18 +81,17 @@ public:
 	{
 		Node* pred{}, * curr{};
 
+		head.lock();
 		pred = &head;
 		curr = pred->next;
-
+		curr->lock();
 		while (curr->key < key)
 		{
+			pred->unlock();
 			pred = curr;
 			curr = curr->next;
+			curr->lock();
 		}
-
-		curr->lock();
-		pred->lock();
-
 		if (key == curr->key)
 		{
 			pred->next = curr->next;
@@ -112,18 +111,17 @@ public:
 	{
 		Node* pred{}, * curr{};
 
+		head.lock();
 		pred = &head;
 		curr = pred->next;
-
+		curr->lock();
 		while (curr->key < key)
 		{
+			pred->unlock();
 			pred = curr;
 			curr = curr->next;
+			curr->lock();
 		}
-
-		curr->lock();
-		pred->lock();
-
 		if (key == curr->key)
 		{
 			curr->unlock();
@@ -155,7 +153,7 @@ constexpr int NUM_TEST{ 4000000 };
 constexpr int KEY_RANGE{ 1000 };
 constexpr int MAX_THREADS{ 8 };
 
-List lst;
+List fList;
 
 void ThreadFunc(int numOfThread)
 {
@@ -166,15 +164,15 @@ void ThreadFunc(int numOfThread)
 		switch (rand() % 3) {
 		case 0:
 			key = rand() % KEY_RANGE;
-			lst.add(key);
+			fList.add(key);
 			break;
 		case 1:
 			key = rand() % KEY_RANGE;
-			lst.remove(key);
+			fList.remove(key);
 			break;
 		case 2:
 			key = rand() % KEY_RANGE;
-			lst.contains(key);
+			fList.contains(key);
 			break;
 		default: cout << "Error\n";
 			exit(-1);
@@ -194,7 +192,7 @@ int main()
 		for (int j = 0; j < i; ++j) threads.emplace_back(ThreadFunc, i);
 		for (auto& thread : threads) thread.join();
 
-		lst.printElement(20);
+		fList.printElement(20);
 
 		auto duration{ high_resolution_clock::now() - start };
 		cout << i << " Threads Duration = " << duration_cast<milliseconds>(duration).count() << " milliseconds\n";

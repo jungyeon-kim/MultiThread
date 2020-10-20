@@ -11,6 +11,8 @@ using namespace std::chrono;
 	게으른동기화
 
 	1. remove 대상을 아무도 가리키고있지 않다면 delete해도 된다. -> shared_ptr을 이용해 메모리 릭 해결?
+
+	※ 속도가 매우 느리다.
 */
 
 class Node
@@ -125,7 +127,7 @@ public:
 	}
 	bool contains(int key)
 	{
-		shared_ptr<Node> node{ head };
+		shared_ptr<Node> node{ head->next };
 		while (node->key < key) node = node->next;
 		return node->key == key && !node->marked;
 	}

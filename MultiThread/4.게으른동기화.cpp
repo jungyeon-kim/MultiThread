@@ -137,7 +137,7 @@ public:
 	}
 	bool contains(int key)
 	{
-		Node* node{ &head };
+		Node* node{ head.next };
 		while (node->key < key) node = node->next;
 		return node->key == key && !node->marked;
 	}
