@@ -8,6 +8,12 @@
 using namespace std; 
 using namespace std::chrono; 
 
+/*
+	게으른동기화
+
+	1. node와 removed(마킹)을 한 메모리로 관리해 한번에 CAS연산을 수행한다.
+*/
+
 class Node; 
 
 class CPtr
@@ -133,7 +139,7 @@ public:
 			}
 		}
 	}
-	bool contatin(int key)
+	bool contain(int key)
 	{
 		Node* pred{}, * curr{};
 		bool removed{};
@@ -185,7 +191,7 @@ void ThreadFunc(int numOfThread)
 			break;
 		case 2:
 			key = rand() % KEY_RANGE;
-			lst.contatin(key);
+			lst.contain(key);
 			break;
 		default:
 			cout << "Error\n";

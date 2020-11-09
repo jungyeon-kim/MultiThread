@@ -16,6 +16,9 @@
     <Filter Include="소스 파일\nb_list">
       <UniqueIdentifier>{7f9374c9-3738-4e2e-b668-d0f0b5c3d6f3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="소스 파일\nb_queue">
+      <UniqueIdentifier>{72c828bc-8dc3-4b74-a92e-f16174a767cf}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="thread.cpp">
@@ -41,6 +44,12 @@
     </ClCompile>
     <ClCompile Include="6.비멈춤동기화.cpp">
       <Filter>소스 파일\nb_list</Filter>
+    </ClCompile>
+    <ClCompile Include="7.성긴동기화.cpp">
+      <Filter>소스 파일\nb_queue</Filter>
+    </ClCompile>
+    <ClCompile Include="8.비멈춤동기화.cpp">
+      <Filter>소스 파일\nb_queue</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
