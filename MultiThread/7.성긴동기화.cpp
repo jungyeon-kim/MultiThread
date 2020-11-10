@@ -73,7 +73,7 @@ public:
 };
 
 constexpr int NUM_TEST{ 10000000 };
-constexpr int MAX_THREADS{ 16 };
+constexpr int MAX_THREADS{ 8 };
 
 Queue que;
 

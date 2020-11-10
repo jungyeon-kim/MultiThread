@@ -44,9 +44,9 @@ public:
 
 	bool CAS(Node* volatile& addr, const Node* oldNode, const Node* newNode) 
 	{
-		int oldvalue{ reinterpret_cast<int>(oldNode) };
-		int newvalue{ reinterpret_cast<int>(newNode) };
-		return atomic_compare_exchange_strong((atomic<int>*)(&addr), &oldvalue, newvalue);
+		long long oldvalue{ reinterpret_cast<long long>(oldNode) };
+		long long newvalue{ reinterpret_cast<long long>(newNode) };
+		return atomic_compare_exchange_strong((atomic<long long>*)(&addr), &oldvalue, newvalue);
 	}
 	void push(int key)
 	{
