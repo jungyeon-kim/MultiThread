@@ -8,11 +8,17 @@ using namespace std;
 using namespace std::chrono;
 
 /*
-	스탬프
+	비멈춤동기화(stamp)
 
 	1. 노드에 카운트 정보를 추가한다. 이를 스탬프라 칭한다.
 	2. CAS연산 시 스탬프가 일치하지 않는다면, CAS는 실패한다.
 */
+
+#ifdef _WIN64
+using integer = long long;
+#else
+using integer = int;
+#endif
 
 class Node
 {
@@ -58,9 +64,9 @@ public:
 	bool CAS(Node* volatile* node, Node* oldNode, Node* newNode)
 	{ 
 		return atomic_compare_exchange_strong(
-			reinterpret_cast<volatile atomic<long long>*>(node),
-			reinterpret_cast<long long*>(&oldNode),
-			reinterpret_cast<long long>(newNode));		// newNode가 포인터이므로 가능
+			reinterpret_cast<volatile atomic<integer>*>(node),
+			reinterpret_cast<integer*>(&oldNode),
+			reinterpret_cast<integer>(newNode));		// newNode가 포인터이므로 가능
 	}
 	// CAS에 성공한다면 스탬프를 1 증가
 	bool stampCAS(Ptr* node, Node* oldNode, int oldStamp, Node* newNode)
@@ -68,9 +74,9 @@ public:
 		Ptr oldPtr{ oldNode, oldStamp };
 		Ptr newPtr{ newNode, oldStamp + 1 };
 		return atomic_compare_exchange_strong(
-			reinterpret_cast<atomic<long long>*>(node),
-			reinterpret_cast<long long*>(&oldPtr),
-			*(reinterpret_cast<long long*>(&newPtr)));	// newPtr이 포인터가 아니므로 이렇게
+			reinterpret_cast<atomic<integer>*>(node),
+			reinterpret_cast<integer*>(&oldPtr),
+			*(reinterpret_cast<integer*>(&newPtr)));	// newPtr이 포인터가 아니므로 이렇게
 	}
 
 	void push(int key)
