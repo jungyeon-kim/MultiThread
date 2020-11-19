@@ -19,6 +19,9 @@
     <Filter Include="소스 파일\nb_queue">
       <UniqueIdentifier>{72c828bc-8dc3-4b74-a92e-f16174a767cf}</UniqueIdentifier>
     </Filter>
+    <Filter Include="소스 파일\nb_stack">
+      <UniqueIdentifier>{57f30acc-2fab-4be5-8783-ebaa5e7d2df8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="thread.cpp">
@@ -53,6 +56,9 @@
     </ClCompile>
     <ClCompile Include="9.비멈춤동기화%28stamp%29.cpp">
       <Filter>소스 파일\nb_queue</Filter>
+    </ClCompile>
+    <ClCompile Include="10.성긴동기화.cpp">
+      <Filter>소스 파일\nb_stack</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

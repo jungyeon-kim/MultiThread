@@ -10,59 +10,60 @@ using namespace std::chrono;
 /*
 	성긴동기화
 
-	1. 큐 객체가 mtx 객체를 가지고 있다.
-	2. enq lock과 deq lock이 따로 존재한다.
+	1. 스택 객체가 mtx 객체를 가지고 있다.
+	2. push와 pop이 같은 lock을 가져야한다.
 */
 
 class Node
 {
 public:
 	int key{};
-	Node* next{};
+	Node* volatile next{};
 	Node() = default;
 	Node(int newKey) { key = newKey; }
 	~Node() = default;
 };
 
-class Queue
+class Stack
 {
-	Node* head{}, * tail{};
-	mutex pushMtx{}, popMtx{};
+	Node* volatile top{};
+	mutex mtx{};
 public:
-	Queue() { head = tail = new Node{}; }
-	~Queue() { init(); delete head; }
+	Stack() = default;
+	~Stack() { init(); }
 
 	void init()
 	{
 		Node* ptr{};
-		while (head != tail)
+		while (top)
 		{
-			ptr = head;
-			head = ptr->next;
+			ptr = top;
+			top = ptr->next;
 			delete ptr;
 		}
 	}
 	void push(int key)
 	{
-		pushMtx.lock();
-		tail->next = new Node{ key };
-		tail = tail->next;
-		pushMtx.unlock();
+		Node* newNode{ new Node{key} };
+		mtx.lock();
+		newNode->next = top;
+		top = newNode;
+		mtx.unlock();
 	}
 	int pop()
 	{
-		popMtx.lock();
-		if (head == tail) { popMtx.unlock(); return -1; }
-		Node* ptr{ head };
-		head = head->next;
+		mtx.lock();
+		if (!top) { mtx.unlock(); return -1; }
+		Node* ptr{ top };
+		top = top->next;
 		int val{ ptr->key };
-		popMtx.unlock();
+		mtx.unlock();
 		delete ptr;
 		return val;
 	}
 	void printElement(int count)
 	{
-		Node* cur{ head->next };
+		Node* cur{ top };
 		for (int i = 0; i < count; ++i)
 		{
 			if (!cur) break;
@@ -76,16 +77,16 @@ public:
 constexpr int NUM_TEST{ 10000000 };
 constexpr int MAX_THREADS{ 8 };
 
-Queue que;
+Stack stk;
 
 void ThreadFunc(int numOfThread)
 {
 	for (int i = 0; i < NUM_TEST / numOfThread; ++i)
 	{
-		switch (rand() % 2 || i < 2 / numOfThread)
+		switch (rand() % 2 || i < 1000 / numOfThread)
 		{
-		case 0: que.push(i); break;
-		case 1: que.pop(); break;
+		case 0: stk.push(i); break;
+		case 1: stk.pop(); break;
 		default: cout << "Error\n"; exit(-1);
 		}
 	}
@@ -98,14 +99,14 @@ int main()
 	for (int i = 1; i <= MAX_THREADS; i *= 2)
 	{
 		threads.clear();
-		que.init();
+		stk.init();
 
 		auto start{ high_resolution_clock::now() };
 
 		for (int j = 0; j < i; ++j) threads.emplace_back(ThreadFunc, i);
 		for (auto& thread : threads) thread.join();
 
-		que.printElement(20);
+		stk.printElement(20);
 
 		auto duration{ high_resolution_clock::now() - start };
 		cout << i << " Threads Duration = " << duration_cast<milliseconds>(duration).count() << " milliseconds\n";
