@@ -60,5 +60,8 @@
     <ClCompile Include="10.성긴동기화.cpp">
       <Filter>소스 파일\nb_stack</Filter>
     </ClCompile>
+    <ClCompile Include="11.비멈춤동기화.cpp">
+      <Filter>소스 파일\nb_stack</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

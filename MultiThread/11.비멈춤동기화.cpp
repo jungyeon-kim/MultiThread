@@ -1,6 +1,7 @@
 #include <iostream>
 #include <thread>
 #include <mutex>
+#include <atomic>
 #include <chrono>
 #include <vector>
 
@@ -27,7 +28,6 @@ public:
 class Stack
 {
 	Node* volatile top{};
-	mutex mtx{};
 public:
 	Stack() = default;
 	~Stack() { init(); }
@@ -42,24 +42,35 @@ public:
 			delete ptr;
 		}
 	}
+
+	bool CAS(Node* volatile& addr, const Node* oldNode, const Node* newNode)
+	{
+		long long oldvalue{ reinterpret_cast<long long>(oldNode) };
+		long long newvalue{ reinterpret_cast<long long>(newNode) };
+		return atomic_compare_exchange_strong((atomic<long long> volatile*)(&addr), &oldvalue, newvalue);
+	}
+
 	void push(int key)
 	{
 		Node* newNode{ new Node{key} };
-		mtx.lock();
-		newNode->next = top;
-		top = newNode;
-		mtx.unlock();
+
+		while (true)
+		{
+			Node* cur{ top };
+			newNode->next = cur;
+			if (CAS(top, cur, newNode)) return;
+		}
 	}
 	int pop()
 	{
-		mtx.lock();
-		if (!top) { mtx.unlock(); return -1; }
-		Node* cur{ top };
-		int val{ cur->key };
-		top = top->next;
-		mtx.unlock();
-		delete cur;
-		return val;
+		while (true)
+		{
+			Node* cur{ top };
+			if (!cur) return -1;
+
+			int val{ cur->key };
+			if (CAS(top, cur, cur->next)) { /*delete cur;*/ return val; }
+		}
 	}
 	void printElement(int count)
 	{
