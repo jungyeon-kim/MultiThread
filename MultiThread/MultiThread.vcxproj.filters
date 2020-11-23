@@ -54,13 +54,16 @@
     <ClCompile Include="8.비멈춤동기화.cpp">
       <Filter>소스 파일\nb_queue</Filter>
     </ClCompile>
-    <ClCompile Include="9.비멈춤동기화%28stamp%29.cpp">
-      <Filter>소스 파일\nb_queue</Filter>
-    </ClCompile>
     <ClCompile Include="10.성긴동기화.cpp">
       <Filter>소스 파일\nb_stack</Filter>
     </ClCompile>
     <ClCompile Include="11.비멈춤동기화.cpp">
+      <Filter>소스 파일\nb_stack</Filter>
+    </ClCompile>
+    <ClCompile Include="9.비멈춤동기화%28stamp%29.cpp">
+      <Filter>소스 파일\nb_queue</Filter>
+    </ClCompile>
+    <ClCompile Include="12.비멈춤동기화%28elimination%29.cpp">
       <Filter>소스 파일\nb_stack</Filter>
     </ClCompile>
   </ItemGroup>

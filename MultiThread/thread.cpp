@@ -97,7 +97,7 @@ using namespace std::chrono;
 	※	Lock을 이용하면 모든 함수가 정해진 시간에 수행을 끝마칠 수 없다.
 		Lock 없이 CAS를 이용한 논블로킹 자료구조를 사용해 동기화하는 것이 바람직하다.
 	※	CAS의 실패가 많을 경우 즉, 스레드간 경쟁이 심할 경우에는 CAS를 적절한 주기를 두어 실행한다.
-		이를 BackOff라 한다.
+		-> 주기를 실패할수록 길게, 성공할수록 짧게 설정 (이를 BackOff라 한다.)
 */
 
 constexpr int MAX_THREADS{ 64 };
