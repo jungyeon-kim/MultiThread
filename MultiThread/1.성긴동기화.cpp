@@ -89,7 +89,6 @@ public:
 			mtx.unlock();
 			return false;
 		}
-
 	}
 	bool contains(int key)
 	{

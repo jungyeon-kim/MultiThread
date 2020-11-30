@@ -13,6 +13,8 @@ using namespace std::chrono;
 
 	1. push와 pop이 거의 동시에 일어난 경우 연산에서 제외한다. (교환자 구현)
 	2. 스레드 충돌빈도에 따라 BackOff를 설정한다.
+
+	※ 현재 코드는 성능이 개선되지 않음 -> 좀더 최적화해야함
 */
 
 constexpr int NUM_TEST{ 10000000 };
