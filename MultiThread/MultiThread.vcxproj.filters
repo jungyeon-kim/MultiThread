@@ -72,5 +72,8 @@
     <ClCompile Include="13.성긴동기화.cpp">
       <Filter>소스 파일\4.skip_list</Filter>
     </ClCompile>
+    <ClCompile Include="14.게으른동기화.cpp">
+      <Filter>소스 파일\4.skip_list</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

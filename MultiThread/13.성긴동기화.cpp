@@ -110,7 +110,7 @@ public:
 
 		if (curr[0]->key == value)
 		{
-			for (int i = 0; i <= curr[0]->topLevel; ++i) pred[i]->next[i] = curr[i]->next[i];
+			for (int i = 0; i <= curr[0]->topLevel; ++i) pred[i]->next[i] = curr[0]->next[i];
 			delete curr[0];
 
 			mtx.unlock();
