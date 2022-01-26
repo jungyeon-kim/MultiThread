@@ -11,7 +11,7 @@ using namespace std::chrono;
 
 	1. 유효성 검사에서 리스트를 순회하지 않는다.
 	2. 각 노드마다 리스트에서 제거되었는지 판별하는 마킹변수를 추가 -> isRemoved
-	3. add시 모든 노드가 연결이 끝났는지 판단하는 변수가 필요하다. -> isLinkFinished
+	3. add, remove시 모든 노드가 연결이 끝났는지 판단하는 변수가 필요하다. -> isLinkFinished
 
 	※ 마킹은 제거동작보다 먼저 실행되야한다.
 */
@@ -79,13 +79,13 @@ public:
 			if (curLevel != MAX_LEVEL) pred[curLevel] = pred[curLevel + 1];
 			curr[curLevel] = pred[curLevel]->next[curLevel];
 
-			if (foundLevel == -1 && curr[curLevel]->key == value) foundLevel = curLevel;
-
 			while (curr[curLevel]->key < value)
 			{
 				pred[curLevel] = curr[curLevel];
 				curr[curLevel] = curr[curLevel]->next[curLevel];
 			}
+
+			if (foundLevel == -1 && curr[curLevel]->key == value) foundLevel = curLevel;
 		}
 
 		return foundLevel;
@@ -141,12 +141,13 @@ public:
 		Node* curr[MAX_LEVEL + 1]{};
 
 		int foundLevel{ find(value, pred, curr) };
-		if (foundLevel == -1 || curr[0]->isRemoved || !curr[0]->isLinkFinished || curr[0]->topLevel != foundLevel)
+		Node* target{ curr[foundLevel] };
+		if (foundLevel == -1 || target->isRemoved || !target->isLinkFinished || target->topLevel != foundLevel)
 			return false;
 
-		curr[0]->lock();
-		if (curr[0]->isRemoved) { curr[0]->unlock(); return false; }
-		curr[0]->isRemoved = true;
+		target->lock();
+		if (target->isRemoved) { target->unlock(); return false; }
+		target->isRemoved = true;
 
 		while (true)
 		{
@@ -162,15 +163,15 @@ public:
 			if (!isValid)
 			{
 				for (int i = 0; i <= curLevel; ++i) pred[i]->unlock();
-				int foundLevel{ find(value, pred, curr) };
+				find(value, pred, curr);
 				continue;
 			}
 
 			for (int i = curr[0]->topLevel; i >= 0; --i) pred[i]->next[i] = curr[0]->next[i];
 			//delete curr[0];
 
-			curr[0]->unlock();
 			for (int i = 0; i <= MAX_LEVEL; ++i) pred[i]->unlock();
+			target->unlock();
 			return true;
 		}
 	}
